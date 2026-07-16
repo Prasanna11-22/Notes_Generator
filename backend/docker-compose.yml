@@ -1,0 +1,89 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CampusBot AI  —  Docker Compose (Development)
+# Run with: docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: campusbot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: campusbot
+      POSTGRES_PASSWORD: campusbot_pass
+      POSTGRES_DB: campusbot_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campusbot -d campusbot_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - campusbot_network
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: campusbot_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://campusbot:campusbot_pass@db:5432/campusbot_db"
+      OLLAMA_HOST: "http://ollama:11434"
+    volumes:
+      - ./logs:/app/logs
+      - .:/app   # hot reload in dev — remove in production
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        alembic upgrade head &&
+        echo 'Migrations applied.' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - campusbot_network
+
+  # ── Ollama Service ─────────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: campusbot_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - campusbot_network
+
+volumes:
+  postgres_data:
+    name: campusbot_postgres_data
+  ollama_data:
+    name: campusbot_ollama_data
+
+networks:
+  campusbot_network:
+    name: campusbot_network
+    driver: bridge

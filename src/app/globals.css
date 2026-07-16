@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FAFAF8;
+  --background-secondary: #F7F7F5;
+  --foreground: #1C1917;
+  
+  --card: #FFFFFF;
+  --card-foreground: #1C1917;
+  
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #0D9488;
+  --secondary-foreground: #FFFFFF;
+  
+  --accent: #D97706;
+  --accent-foreground: #FFFFFF;
+  
+  --border: #E5E7EB;
+  --muted: #6B7280;
+  --muted-background: #F3F4F6;
+  
+  --radius: 16px;
+}
+
+.dark {
+  --background: #0F172A;
+  --background-secondary: #1E293B;
+  --foreground: #F8FAFC;
+  
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #14B8A6;
+  --secondary-foreground: #0F172A;
+  
+  --accent: #F59E0B;
+  --accent-foreground: #0F172A;
+  
+  --border: #334155;
+  --muted: #94A3B8;
+  --muted-background: #0F172A;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-bg-secondary: var(--background-secondary);
+  --color-foreground: var(--foreground);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-border-custom: var(--border);
+  --color-muted-custom: var(--muted);
+  --color-muted-bg: var(--muted-background);
+  
+  --font-sans: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui;
+  --font-heading: var(--font-plus-jakarta), ui-sans-serif, system-ui;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom Scrollbar for Sleek UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Elegant Skeleton Wave */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loader {
+  background: linear-gradient(90deg, rgba(229, 231, 235, 0.5) 25%, rgba(209, 213, 219, 0.6) 50%, rgba(229, 231, 235, 0.5) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.dark .skeleton-loader {
+  background: linear-gradient(90deg, rgba(51, 65, 85, 0.4) 25%, rgba(71, 85, 105, 0.5) 50%, rgba(51, 65, 85, 0.4) 75%);
+  background-size: 200% 100%;
+}
