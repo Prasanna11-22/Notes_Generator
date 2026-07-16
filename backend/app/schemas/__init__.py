@@ -87,6 +87,13 @@ from app.schemas.learning_material import (
     LearningMaterialValidationResponse,
     LearningMaterialCacheDetails,
 )
+from app.schemas.mcq import (
+    MCQGenerateRequest,
+    MCQRegenerateRequest,
+    MCQQuestionRead,
+    MCQValidationRequest,
+    MCQValidationResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -168,6 +175,11 @@ __all__ = [
     "LearningMaterialValidationRequest",
     "LearningMaterialValidationResponse",
     "LearningMaterialCacheDetails",
+    "MCQGenerateRequest",
+    "MCQRegenerateRequest",
+    "MCQQuestionRead",
+    "MCQValidationRequest",
+    "MCQValidationResponse",
 ]
 
 

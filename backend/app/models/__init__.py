@@ -19,6 +19,7 @@ from app.models.document_processing import DocumentMetadata, DocumentProcessing,
 from app.models.resource import Resource
 from app.models.user import User, UserRole
 from app.models.learning_material import LearningMaterial, LearningMaterialCache
+from app.models.mcq import MCQQuestion
 
 __all__ = [
     "User",
@@ -45,6 +46,7 @@ __all__ = [
     "PromptTemplate",
     "LearningMaterial",
     "LearningMaterialCache",
+    "MCQQuestion",
 ]
 
 

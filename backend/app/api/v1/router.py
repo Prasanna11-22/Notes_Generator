@@ -17,6 +17,7 @@ from app.api.v1.retriever import router as retriever_router
 from app.api.v1.prompt import router as prompt_router
 from app.api.v1.llm import router as llm_router
 from app.api.v1.learning_material import router as learning_material_router
+from app.api.v1.mcq import router as mcq_router
 
 api_router = APIRouter()
 
@@ -31,4 +32,5 @@ api_router.include_router(retriever_router)
 api_router.include_router(prompt_router)
 api_router.include_router(llm_router)
 api_router.include_router(learning_material_router)
+api_router.include_router(mcq_router)
 
