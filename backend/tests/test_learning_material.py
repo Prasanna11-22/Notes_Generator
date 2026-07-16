@@ -353,6 +353,32 @@ class TestLearningMaterialAPI:
         assert payload["success"] is True
         assert "Generated content" in payload["data"]["content"]
 
+    @patch("app.services.learning_material.service.LearningMaterialService.regenerate_material")
+    async def test_regenerate_endpoint_success(self, mock_regenerate, client: AsyncClient, auth_headers: dict):
+        mock_regenerate.return_value = {
+            "id": str(uuid.uuid4()),
+            "content": "# Regenerated content.",
+            "format": "markdown",
+            "cached": False,
+            "generator_type": "Concept Explanation",
+            "model": "gemma3:4b",
+            "prompt_version": "v1.0"
+        }
+
+        res = await client.post(
+            "/api/v1/learning-material/regenerate",
+            headers=auth_headers,
+            json={
+                "material_id": str(uuid.uuid4()),
+                "faculty_preferences": "More examples.",
+                "output_format": "markdown"
+            }
+        )
+        assert res.status_code == 200
+        payload = res.json()
+        assert payload["success"] is True
+        assert "Regenerated content" in payload["data"]["content"]
+
     async def test_generate_endpoint_forbidden_for_students(self, client: AsyncClient, db_session: AsyncSession):
         """Standard student users must be forbidden from learning material generation endpoints."""
         from app.core.security import hash_password

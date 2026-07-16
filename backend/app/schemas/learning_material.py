@@ -59,6 +59,7 @@ class LearningMaterialGenerateRequest(BaseModel):
 class LearningMaterialRegenerateRequest(BaseModel):
     """Schema representing learning material regeneration modifications."""
 
+    material_id: uuid.UUID = Field(..., description="Target Learning Material ID to regenerate.")
     faculty_preferences: Optional[str] = Field(
         None,
         description="Appended custom free-text faculty overrides.",

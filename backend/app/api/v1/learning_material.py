@@ -79,7 +79,6 @@ async def generate_material(
     summary="Regenerate learning materials with updated preferences",
 )
 async def regenerate_material(
-    material_id: uuid.UUID,
     payload: LearningMaterialRegenerateRequest,
     db: AsyncSession = Depends(get_db),
     current_user: FacultyUser = None,
@@ -88,7 +87,7 @@ async def regenerate_material(
     try:
         result = await service.regenerate_material(
             db=db,
-            material_id=material_id,
+            material_id=payload.material_id,
             faculty_preferences=payload.faculty_preferences,
             output_format=payload.output_format,
             changed_by_user_id=current_user.id if current_user else None,
