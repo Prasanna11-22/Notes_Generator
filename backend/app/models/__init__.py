@@ -18,6 +18,7 @@ from app.models.prompt_template import PromptTemplate
 from app.models.document_processing import DocumentMetadata, DocumentProcessing, ProcessingStatus
 from app.models.resource import Resource
 from app.models.user import User, UserRole
+from app.models.learning_material import LearningMaterial, LearningMaterialCache
 
 __all__ = [
     "User",
@@ -42,6 +43,8 @@ __all__ = [
     "ChunkEmbedding",
     "DocumentEmbeddingJob",
     "PromptTemplate",
+    "LearningMaterial",
+    "LearningMaterialCache",
 ]
 
 

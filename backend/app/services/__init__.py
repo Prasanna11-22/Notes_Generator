@@ -11,6 +11,7 @@ from app.services.prompt_optimization import PromptOptimizationService
 from app.services.prompt_validation import PromptValidationService
 from app.services.prompt_builder import PromptBuilderService
 from app.services.prompt_template_service import PromptTemplateService
+from app.services.learning_material.service import LearningMaterialService
 
 __all__ = [
     "AuthService",
@@ -24,4 +25,5 @@ __all__ = [
     "PromptValidationService",
     "PromptBuilderService",
     "PromptTemplateService",
+    "LearningMaterialService",
 ]

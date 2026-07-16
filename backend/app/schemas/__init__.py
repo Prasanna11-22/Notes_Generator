@@ -79,6 +79,14 @@ from app.schemas.llm import (
     LLMModelListResponse,
     LLMHealthResponse,
 )
+from app.schemas.learning_material import (
+    LearningMaterialGenerateRequest,
+    LearningMaterialRegenerateRequest,
+    LearningMaterialRead,
+    LearningMaterialValidationRequest,
+    LearningMaterialValidationResponse,
+    LearningMaterialCacheDetails,
+)
 
 __all__ = [
     "UserCreate",
@@ -154,6 +162,12 @@ __all__ = [
     "ChunkStatistics",
     "ChunkQualityReportItem",
     "DocumentChunkingJobRead",
+    "LearningMaterialGenerateRequest",
+    "LearningMaterialRegenerateRequest",
+    "LearningMaterialRead",
+    "LearningMaterialValidationRequest",
+    "LearningMaterialValidationResponse",
+    "LearningMaterialCacheDetails",
 ]
 
 
