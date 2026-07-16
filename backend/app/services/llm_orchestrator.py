@@ -40,12 +40,19 @@ class LLMOrchestratorService:
     def validate_prompt(self, prompt: str, system_prompt: str | None = None) -> None:
         """
         Validate prompt text inputs before forwarding to LLM provider.
-        Rejects empty or purely whitespace prompts.
+        Rejects empty, whitespace-only, or injection-suspicious prompts.
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty or whitespace-only.")
         if system_prompt is not None and not system_prompt.strip():
             raise ValueError("System prompt cannot be empty if provided.")
+
+        # Check for prompt injection using Phase 8 validation service
+        from app.services.prompt_validation import PromptValidationService
+        validator = PromptValidationService()
+        validator.sanitize_and_check(prompt, "prompt")
+        if system_prompt:
+            validator.sanitize_and_check(system_prompt, "system_prompt")
 
     def validate_response(self, text: str, require_json: bool = False) -> None:
         """
@@ -117,10 +124,19 @@ class LLMOrchestratorService:
         """
         self.validate_prompt(prompt, system_prompt)
 
-        # Merge defaults timeout with override options
-        runtime_options = dict(options) if options else {}
-        if "max_tokens" not in runtime_options:
-            runtime_options["max_tokens"] = settings.llm_max_tokens
+        # Merge defaults hyper-parameters from settings, then override with options
+        runtime_options = {
+            "temperature": settings.llm_temperature,
+            "top_p": settings.llm_top_p,
+            "top_k": settings.llm_top_k,
+            "max_tokens": settings.llm_max_tokens,
+            "repeat_penalty": settings.llm_repeat_penalty,
+            "num_ctx": settings.llm_num_ctx,
+        }
+        if options:
+            for k, v in options.items():
+                if v is not None:
+                    runtime_options[k] = v
 
         retries = 0
         backoff = 1.0
@@ -199,9 +215,19 @@ class LLMOrchestratorService:
         """
         self.validate_prompt(prompt, system_prompt)
 
-        runtime_options = dict(options) if options else {}
-        if "max_tokens" not in runtime_options:
-            runtime_options["max_tokens"] = settings.llm_max_tokens
+        # Merge defaults hyper-parameters from settings, then override with options
+        runtime_options = {
+            "temperature": settings.llm_temperature,
+            "top_p": settings.llm_top_p,
+            "top_k": settings.llm_top_k,
+            "max_tokens": settings.llm_max_tokens,
+            "repeat_penalty": settings.llm_repeat_penalty,
+            "num_ctx": settings.llm_num_ctx,
+        }
+        if options:
+            for k, v in options.items():
+                if v is not None:
+                    runtime_options[k] = v
 
         retries = 0
         backoff = 1.0
@@ -248,6 +274,9 @@ class LLMOrchestratorService:
                         completion_tokens = chunk.get("completion_tokens") or 0
                         model_used = chunk.get("model", model_used)
                         provider_used = chunk.get("provider", provider_used)
+                        
+                        # Validate full accumulated stream response
+                        self.validate_response("".join(total_text))
 
                     yield {
                         "text": text_chunk,
