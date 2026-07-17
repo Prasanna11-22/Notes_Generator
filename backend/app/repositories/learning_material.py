@@ -15,8 +15,7 @@ class LearningMaterialRepository(BaseRepository[LearningMaterial]):
     Repository handling database access for generated Learning Materials.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(LearningMaterial, session)
+    model = LearningMaterial
 
     async def get_by_topic(self, topic_id: uuid.UUID) -> list[LearningMaterial]:
         """

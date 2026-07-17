@@ -168,10 +168,44 @@ class MCQOrchestratorService:
             
             # If the LLM generated fewer questions than requested, we log a warning but process what we got.
             for q_obj in parsed_questions:
-                stem = q_obj.get("question") or q_obj.get("question_text")
-                opts = q_obj.get("options")
-                correct = q_obj.get("correct_answer") or q_obj.get("answer")
-                explanation = q_obj.get("explanation")
+                # Normalize keys to lowercase for robust lookup
+                normalized_keys = {k.lower().replace("_", ""): k for k in q_obj.keys()}
+                
+                # Extract question stem
+                stem = None
+                for stem_key in ("question", "questiontext", "stem"):
+                    if stem_key in normalized_keys:
+                        stem = q_obj[normalized_keys[stem_key]]
+                        break
+                if not stem:
+                    stem = q_obj.get("question") or q_obj.get("question_text")
+                
+                # Extract options
+                opts = None
+                for opts_key in ("options", "choices", "distractors"):
+                    if opts_key in normalized_keys:
+                        opts = q_obj[normalized_keys[opts_key]]
+                        break
+                if not opts:
+                    opts = q_obj.get("options")
+                        
+                # Extract correct answer
+                correct = None
+                for correct_key in ("correctanswer", "answer", "correctkey"):
+                    if correct_key in normalized_keys:
+                        correct = q_obj[normalized_keys[correct_key]]
+                        break
+                if not correct:
+                    correct = q_obj.get("correct_answer") or q_obj.get("answer")
+
+                # Extract explanation
+                explanation = ""
+                for exp_key in ("explanation", "rationale", "reason"):
+                    if exp_key in normalized_keys:
+                        explanation = q_obj[normalized_keys[exp_key]]
+                        break
+                if not explanation:
+                    explanation = q_obj.get("explanation") or ""
 
                 # Perform pipeline validation checks
                 MCQValidator.validate_mcq_structure(stem, opts, correct)

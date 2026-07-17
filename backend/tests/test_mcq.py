@@ -350,3 +350,66 @@ class TestMCQAPI:
         res = await client.get("/api/v1/mcq/health", headers=auth_headers)
         assert res.status_code == 200
         assert res.json()["data"]["status"] == "healthy"
+
+    @patch("app.api.v1.mcq.MCQRepository.get_by_id", new_callable=AsyncMock)
+    @patch("app.api.v1.mcq.MCQRepository.delete", new_callable=AsyncMock)
+    @patch("app.api.v1.mcq.MCQOrchestratorService.generate_mcqs", new_callable=AsyncMock)
+    async def test_regenerate_endpoint_success(self, mock_generate, mock_delete, mock_get, client: AsyncClient, auth_headers: dict):
+        from datetime import datetime
+        q_id = uuid.uuid4()
+        now = datetime.utcnow()
+        existing = MCQQuestion(
+            id=q_id,
+            course_id=uuid.uuid4(),
+            topic_id=uuid.uuid4(),
+            question_text="Old Question Stem?",
+            options={"A": "One", "B": "Two"},
+            correct_answer="A",
+            explanation="Old Explanation",
+            bloom_level="Remember",
+            difficulty="Easy",
+            prompt_version="v1.0",
+            model_version="gemma3",
+            created_by=uuid.uuid4(),
+            history=[],
+        )
+        # SQLAlchemy server_default columns are only populated by the DB;
+        # directly assign them for use in offline unit tests.
+        existing.created_at = now
+        existing.updated_at = now
+        mock_get.return_value = existing
+
+        fresh = MCQQuestion(
+            id=uuid.uuid4(),
+            course_id=existing.course_id,
+            topic_id=existing.topic_id,
+            question_text="New Regenerated Question Stem?",
+            options={"A": "One", "B": "Two"},
+            correct_answer="B",
+            explanation="New Explanation",
+            bloom_level="Remember",
+            difficulty="Easy",
+            prompt_version="v1.0",
+            model_version="gemma3",
+            created_by=existing.created_by,
+            history=[],
+        )
+        fresh.created_at = now
+        fresh.updated_at = now
+        mock_generate.return_value = [fresh]
+        mock_delete.return_value = None
+
+        res = await client.post(
+            "/api/v1/mcq/regenerate",
+            headers=auth_headers,
+            json={
+                "question_id": str(q_id),
+                "faculty_preferences": "Make it harder"
+            }
+        )
+        assert res.status_code == 200, f"Expected 200 but got {res.status_code}: {res.json()}"
+        payload = res.json()
+        assert payload["success"] is True
+        assert payload["data"]["question_text"] == "New Regenerated Question Stem?"
+        assert len(payload["data"]["history"]) == 1
+        assert payload["data"]["history"][0]["question_text"] == "Old Question Stem?"

@@ -15,8 +15,7 @@ class MCQRepository(BaseRepository[MCQQuestion]):
     Repository handling database access for generated MCQs.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(MCQQuestion, session)
+    model = MCQQuestion
 
     async def get_by_topic(self, topic_id: uuid.UUID) -> list[MCQQuestion]:
         """
@@ -49,7 +48,7 @@ class MCQRepository(BaseRepository[MCQQuestion]):
         """
         Wipe an MCQ record by its primary key.
         """
-        question = await self.get(id)
+        question = await self.get_by_id(id)
         if not question:
             return False
         await self.delete(question)

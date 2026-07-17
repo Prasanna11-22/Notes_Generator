@@ -94,6 +94,13 @@ from app.schemas.mcq import (
     MCQValidationRequest,
     MCQValidationResponse,
 )
+from app.schemas.assignment import (
+    AssignmentGenerateRequest,
+    AssignmentRegenerateRequest,
+    AssignmentRead,
+    AssignmentValidationRequest,
+    AssignmentValidationResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -180,6 +187,11 @@ __all__ = [
     "MCQQuestionRead",
     "MCQValidationRequest",
     "MCQValidationResponse",
+    "AssignmentGenerateRequest",
+    "AssignmentRegenerateRequest",
+    "AssignmentRead",
+    "AssignmentValidationRequest",
+    "AssignmentValidationResponse",
 ]
 
 

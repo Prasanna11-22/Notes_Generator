@@ -3,6 +3,7 @@ API routes for Phase 11 Enterprise MCQ Generation Engine.
 """
 
 from typing import List
+from datetime import datetime
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,7 +78,7 @@ async def regenerate_mcq(
     current_user: FacultyUser = None,
 ) -> APIResponse[MCQQuestionRead]:
     repo = MCQRepository(db)
-    question = await repo.get(payload.question_id)
+    question = await repo.get_by_id(payload.question_id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -226,7 +227,7 @@ async def get_mcq_details(
     _user: FacultyUser = None,
 ) -> APIResponse[MCQQuestionRead]:
     repo = MCQRepository(db)
-    question = await repo.get(id)
+    question = await repo.get_by_id(id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

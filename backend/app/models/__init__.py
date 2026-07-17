@@ -20,6 +20,7 @@ from app.models.resource import Resource
 from app.models.user import User, UserRole
 from app.models.learning_material import LearningMaterial, LearningMaterialCache
 from app.models.mcq import MCQQuestion
+from app.models.assignment import Assignment
 
 __all__ = [
     "User",
@@ -47,6 +48,7 @@ __all__ = [
     "LearningMaterial",
     "LearningMaterialCache",
     "MCQQuestion",
+    "Assignment",
 ]
 
 
