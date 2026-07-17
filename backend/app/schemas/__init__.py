@@ -101,6 +101,12 @@ from app.schemas.assignment import (
     AssignmentValidationRequest,
     AssignmentValidationResponse,
 )
+from app.schemas.image import (
+    ImageSearchRequest,
+    ImageRead,
+    ImageValidationRequest,
+    ImageValidationResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -192,6 +198,10 @@ __all__ = [
     "AssignmentRead",
     "AssignmentValidationRequest",
     "AssignmentValidationResponse",
+    "ImageSearchRequest",
+    "ImageRead",
+    "ImageValidationRequest",
+    "ImageValidationResponse",
 ]
 
 

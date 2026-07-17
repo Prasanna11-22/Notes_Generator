@@ -21,6 +21,7 @@ from app.models.user import User, UserRole
 from app.models.learning_material import LearningMaterial, LearningMaterialCache
 from app.models.mcq import MCQQuestion
 from app.models.assignment import Assignment
+from app.models.image import Image
 
 __all__ = [
     "User",
@@ -49,6 +50,7 @@ __all__ = [
     "LearningMaterialCache",
     "MCQQuestion",
     "Assignment",
+    "Image",
 ]
 
 
