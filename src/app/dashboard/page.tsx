@@ -4,6 +4,7 @@ import React from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Sparkles,
   BookOpen,
@@ -20,17 +21,18 @@ import Link from 'next/link';
 
 export default function DashboardHome() {
   const { user, history, isConfigured, selectedCourse, selectedTopic } = useAppStore();
+  const { t, lang } = useTranslation();
 
   const stats = [
-    { name: 'Active Courses', value: '4', icon: BookOpen, change: '+1 this sem', color: 'text-primary bg-primary/10' },
-    { name: 'MCQs in Bank', value: '142', icon: HelpCircle, change: '+24 this week', color: 'text-secondary bg-secondary/10' },
-    { name: 'Assignments Drafted', value: '18', icon: FileSpreadsheet, change: '6 formats', color: 'text-amber-600 bg-amber-500/10' },
-    { name: 'Ingested Resources', value: '14 files', icon: FileText, change: '24.2 MB total', color: 'text-purple-600 bg-purple-500/10' },
+    { name: lang === 'ta' ? 'செயலில் உள்ள பாடங்கள்' : 'Active Courses', value: '4', icon: BookOpen, change: '+1 this sem', color: 'text-primary bg-primary/10' },
+    { name: lang === 'ta' ? 'வினாக்கள்' : 'MCQs in Bank', value: '142', icon: HelpCircle, change: '+24 this week', color: 'text-secondary bg-secondary/10' },
+    { name: lang === 'ta' ? 'வரைவு ஒப்படைப்புகள்' : 'Assignments Drafted', value: '18', icon: FileSpreadsheet, change: '6 formats', color: 'text-amber-600 bg-amber-500/10' },
+    { name: lang === 'ta' ? 'உள்ளீர்க்கப்பட்ட குறிப்புகள்' : 'Ingested Resources', value: '14 files', icon: FileText, change: '24.2 MB total', color: 'text-purple-600 bg-purple-500/10' },
   ];
 
   const quickActions = [
-    { name: 'Configure Course', desc: 'Select department, unit, and topics', href: '/dashboard/courses', icon: PlusCircle, btnText: 'Configure' },
-    { name: 'Generate Content', desc: 'Instantly run multi-agent drafts', href: '/dashboard/generate', icon: Sparkles, btnText: 'Generate', disabled: !isConfigured },
+    { name: t('courses.card_title'), desc: t('courses.card_desc'), href: '/dashboard/courses', icon: PlusCircle, btnText: t('common.add') },
+    { name: t('generate.title'), desc: t('generate.subtitle'), href: '/dashboard/generate', icon: Sparkles, btnText: t('generate.start'), disabled: !isConfigured },
   ];
 
   const templates = [
@@ -42,7 +44,7 @@ export default function DashboardHome() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-primary/5 dark:bg-primary/10 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-primary/5 dark:bg-primary/10 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-foreground">
         <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 dark:bg-primary/5 blur-3xl pointer-events-none" />
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary dark:bg-primary/20 text-xs font-semibold">
@@ -50,31 +52,31 @@ export default function DashboardHome() {
             System Ready
           </div>
           <h2 className="font-heading font-bold text-2xl tracking-tight">
-            Welcome back, {user.name}
+            {t('dashboard.welcome_user', { name: user.name })}
           </h2>
           <p className="text-sm text-muted-custom max-w-xl">
             {isConfigured ? (
               <>
-                You are currently working on{' '}
+                {lang === 'ta' ? 'நீங்கள் தற்போது ' : 'You are currently working on '}{' '}
                 <strong className="text-foreground">{selectedCourse}</strong> &gt;{' '}
-                <strong className="text-foreground">{selectedTopic}</strong>. Ready to generate.
+                <strong className="text-foreground">{selectedTopic}</strong>{lang === 'ta' ? '-இல் பணியாற்றுகிறீர்கள். உருவாக்க தயாராக உள்ளது.' : '. Ready to generate.'}
               </>
             ) : (
-              'Set up a department curriculum, upload files, and configure preferences to start generating cognitive materials.'
+              t('dashboard.server_status')
             )}
           </p>
         </div>
         <div className="shrink-0">
           <Link href={isConfigured ? '/dashboard/generate' : '/dashboard/courses'}>
             <Button className="shadow-xs cursor-pointer">
-              {isConfigured ? 'Start Generation' : 'Configure Course'} <ArrowRight className="h-4 w-4 ml-1.5" />
+              {isConfigured ? t('generate.start') : t('dashboard.configure_course')} <ArrowRight className="h-4 w-4 ml-1.5" />
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-foreground">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -98,15 +100,15 @@ export default function DashboardHome() {
       </div>
 
       {/* Main Grid: Left Side Recent/Actions, Right Side Activity/Tips */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-foreground">
         
         {/* Left 2 Columns */}
         <div className="lg:col-span-2 space-y-8">
           {/* Quick Actions & Templates */}
           <Card className="border border-border-custom bg-card">
             <CardHeader>
-              <CardTitle>Content Setup Tools</CardTitle>
-              <CardDescription>Launch new curriculum sessions or continue editing drafts.</CardDescription>
+              <CardTitle>{lang === 'ta' ? 'அமைப்பு கருவிகள்' : 'Content Setup Tools'}</CardTitle>
+              <CardDescription>{lang === 'ta' ? 'புதிய பாடத்திட்ட அமர்வுகளைத் தொடங்கவும் அல்லது குறிப்புகளைத் திருத்தவும்.' : 'Launch new curriculum sessions or continue editing drafts.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Action Buttons Grid */}
@@ -127,7 +129,7 @@ export default function DashboardHome() {
                       </div>
                       <Link href={act.href} className="w-full">
                         <Button
-                          variant={act.btnText === 'Generate' ? 'primary' : 'outline'}
+                          variant={act.btnText === t('generate.start') ? 'primary' : 'outline'}
                           size="sm"
                           disabled={act.disabled}
                           className="w-full text-xs"
@@ -142,7 +144,7 @@ export default function DashboardHome() {
 
               {/* Templates */}
               <div className="space-y-3.5 pt-2">
-                <h4 className="font-semibold text-xs text-muted-custom uppercase tracking-wider">Suggested Pedagogical Templates</h4>
+                <h4 className="font-semibold text-xs text-muted-custom uppercase tracking-wider">{lang === 'ta' ? 'பரிந்துரைக்கப்பட்ட கற்பித்தல் வார்ப்புருக்கள்' : 'Suggested Pedagogical Templates'}</h4>
                 <div className="space-y-2.5">
                   {templates.map((tpl) => (
                     <div
@@ -167,11 +169,11 @@ export default function DashboardHome() {
           <Card className="border border-border-custom bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Recent Generated Files</CardTitle>
-                <CardDescription>Access and download assessment materials created recently.</CardDescription>
+                <CardTitle>{t('dashboard.recent_materials')}</CardTitle>
+                <CardDescription>{lang === 'ta' ? 'சமீபத்தில் உருவாக்கப்பட்ட மதிப்பீட்டுப் பொருட்களை அணுகி பதிவிறக்கவும்.' : 'Access and download assessment materials created recently.'}</CardDescription>
               </div>
               <Link href="/dashboard/history" className="text-xs font-semibold text-primary hover:underline">
-                View All
+                {t('dashboard.view_all')}
               </Link>
             </CardHeader>
             <CardContent className="pt-0">
@@ -179,10 +181,10 @@ export default function DashboardHome() {
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-border-custom/80 text-muted-custom font-semibold">
-                      <th className="pb-3 pr-4">Date</th>
-                      <th className="pb-3 px-4">Topic</th>
-                      <th className="pb-3 px-4">Curriculum</th>
-                      <th className="pb-3 pl-4 text-right">Details</th>
+                      <th className="pb-3 pr-4">{lang === 'ta' ? 'தேதி' : 'Date'}</th>
+                      <th className="pb-3 px-4">{lang === 'ta' ? 'தலைப்பு' : 'Topic'}</th>
+                      <th className="pb-3 px-4">{lang === 'ta' ? 'பாடத்திட்டம்' : 'Curriculum'}</th>
+                      <th className="pb-3 pl-4 text-right">{lang === 'ta' ? 'விவரங்கள்' : 'Details'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -226,8 +228,8 @@ export default function DashboardHome() {
           {/* Recent Activity Timeline */}
           <Card className="border border-border-custom bg-card">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Track agent executions and audit trails.</CardDescription>
+              <CardTitle>{lang === 'ta' ? 'சமீபத்திய செயல்பாடு' : 'Recent Activity'}</CardTitle>
+              <CardDescription>{lang === 'ta' ? 'அமைப்பு இயக்கங்கள் மற்றும் தணிக்கை தடங்களைக் கண்காணிக்கவும்.' : 'Track agent executions and audit trails.'}</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="relative pl-6 border-l border-border-custom/80 space-y-6">

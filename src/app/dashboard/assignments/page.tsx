@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore, GeneratedAssignment } from '@/store/useAppStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   FileSpreadsheet,
   Download,
@@ -21,7 +22,18 @@ import {
 
 export default function AssignmentGeneratorPage() {
   const router = useRouter();
-  const { generatedAssignments, updateAssignment, regenerateAssignment, deleteAssignment, isConfigured } = useAppStore();
+  const { t } = useTranslation();
+  const {
+    generatedAssignments,
+    updateAssignment,
+    regenerateAssignment,
+    deleteAssignment,
+    isConfigured,
+    selectedCourse,
+    selectedTopic,
+    selectedSemester,
+    selectedDept,
+  } = useAppStore();
 
   // Collapsed sections management
   const [collapsedStates, setCollapsedStates] = useState<Record<string, { rubric: boolean; key: boolean }>>({});
@@ -36,17 +48,17 @@ export default function AssignmentGeneratorPage() {
   if (generatedAssignments.length === 0) {
     return (
       <Card className="border border-border-custom bg-card text-center p-12 animate-in fade-in duration-300">
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 text-foreground">
           <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
             <FileSpreadsheet className="h-6 w-6" />
           </div>
-          <h3 className="font-heading font-bold text-lg">No Assignments Generated</h3>
+          <h3 className="font-heading font-bold text-lg">{t('generate.missing_config')}</h3>
           <p className="text-xs text-muted-custom max-w-sm mx-auto">
-            You must configure your curriculum target and run the AI multi-agent generator to draft assignments.
+            {t('generate.missing_config_desc')}
           </p>
           <div className="pt-2">
             <Button onClick={() => router.push(isConfigured ? '/dashboard/generate' : '/dashboard/courses')}>
-              {isConfigured ? 'Go to Generator' : 'Configure Course'}
+              {isConfigured ? t('generate.configure_now') : t('dashboard.configure_course')}
             </Button>
           </div>
         </CardContent>
@@ -92,14 +104,44 @@ export default function AssignmentGeneratorPage() {
     closeEdit();
   };
 
-  // Export homework
+  // Export homework in human-readable Markdown format
   const handleExport = () => {
-    const dataStr = JSON.stringify(generatedAssignments, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
+    const formattedDate = new Date().toLocaleDateString();
+    
+    let markdownContent = `# Assignment Sheet: ${selectedTopic || 'Academic Evaluation'}\n`;
+    markdownContent += `**Course**: ${selectedCourse || 'General Curriculum'}\n`;
+    if (selectedSemester) {
+      markdownContent += `**Semester**: ${selectedSemester}\n`;
+    }
+    if (selectedDept) {
+      markdownContent += `**Department**: ${selectedDept}\n`;
+    }
+    markdownContent += `**Date Generated**: ${formattedDate}\n\n`;
+    markdownContent += `---\n\n`;
+
+    generatedAssignments.forEach((item, idx) => {
+      markdownContent += `## Question ${idx + 1} (${item.marks} Marks)\n`;
+      markdownContent += `**Cognitive Level (Bloom's Taxonomy)**: ${item.bloomLevel}\n`;
+      markdownContent += `**Question Type**: ${item.questionType.toUpperCase()}\n\n`;
+      
+      markdownContent += `### Question:\n${item.question}\n\n`;
+      
+      if (item.rubric) {
+        markdownContent += `### Grading Rubric Guide:\n${item.rubric}\n\n`;
+      }
+      
+      if (item.answerKey) {
+        markdownContent += `### Evaluator Answer Key:\n${item.answerKey}\n\n`;
+      }
+      
+      markdownContent += `---\n\n`;
+    });
+
+    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Assignment_Sheet_${Date.now()}.json`;
+    a.download = `Assignment_Sheet_${(selectedTopic || 'Topic').toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -112,12 +154,12 @@ export default function AssignmentGeneratorPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-heading font-bold text-2xl tracking-tight">Assignment Generator Sheets</h2>
-          <p className="text-xs text-muted-custom">Review, grade rubrics, and finalize generated homework worksheets.</p>
+          <h2 className="font-heading font-bold text-2xl tracking-tight">{t('assignments.title')}</h2>
+          <p className="text-xs text-muted-custom">{t('assignments.subtitle')}</p>
         </div>
 
         <Button variant="outline" size="sm" className="text-xs shrink-0 cursor-pointer" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1.5" /> Export Assignment File
+          <Download className="h-4 w-4 mr-1.5" /> {t('assignments.export')}
         </Button>
       </div>
 
@@ -128,19 +170,21 @@ export default function AssignmentGeneratorPage() {
           const keyCollapsed = collapsedStates[item.id]?.key !== false; // defaults to collapsed (true)
 
           return (
-            <Card key={item.id} className="border border-border-custom bg-card shadow-xs hover:border-primary/10 transition-all duration-200">
+            <Card key={item.id} className="border border-border-custom bg-card shadow-xs hover:border-primary/10 transition-all duration-200 text-foreground">
               {/* Card Header metadata */}
               <div className="p-6 pb-4 border-b border-border-custom/40 flex flex-wrap items-center justify-between gap-3 bg-bg-secondary/20">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-muted-custom uppercase">Question {idx + 1}</span>
+                  <span className="text-xs font-semibold text-muted-custom uppercase">
+                    {t('common.actions')} {idx + 1}
+                  </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold text-[10px]">
-                    {item.marks} Marks
+                    {t('assignments.marks', { count: item.marks })}
                   </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-bold text-[10px]">
                     {item.bloomLevel}
                   </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/10 text-secondary font-semibold text-[10px] capitalize">
-                    {item.questionType} Type
+                    {t('assignments.type', { type: item.questionType })}
                   </span>
                 </div>
 
@@ -168,7 +212,7 @@ export default function AssignmentGeneratorPage() {
                     className="w-full flex items-center justify-between px-4 py-3 bg-bg-secondary/40 text-xs font-semibold text-left transition-colors"
                   >
                     <span className="flex items-center gap-2 text-muted-custom">
-                      <Award className="h-4 w-4 text-primary" /> Grading Rubric Guide
+                      <Award className="h-4 w-4 text-primary" /> {t('assignments.rubric')}
                     </span>
                     {rubricCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </button>
@@ -186,7 +230,7 @@ export default function AssignmentGeneratorPage() {
                     className="w-full flex items-center justify-between px-4 py-3 bg-bg-secondary/40 text-xs font-semibold text-left transition-colors"
                   >
                     <span className="flex items-center gap-2 text-muted-custom">
-                      <Key className="h-4 w-4 text-secondary" /> Evaluator Answer Key
+                      <Key className="h-4 w-4 text-secondary" /> {t('assignments.key')}
                     </span>
                     {keyCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </button>
@@ -205,9 +249,9 @@ export default function AssignmentGeneratorPage() {
       {/* Inline Editor Dialog */}
       {editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-card w-full max-w-xl rounded-2xl border border-border-custom shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card w-full max-w-xl rounded-2xl border border-border-custom shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-foreground">
             <div className="flex h-16 items-center justify-between px-6 border-b border-border-custom">
-              <h3 className="font-heading font-semibold text-base">Edit Assignment Details</h3>
+              <h3 className="font-heading font-semibold text-base">{t('assignments.edit_title')}</h3>
               <button onClick={closeEdit} className="h-8 w-8 rounded-lg hover:bg-muted-bg flex items-center justify-center text-muted-custom">
                 <X className="h-4 w-4" />
               </button>
@@ -216,7 +260,7 @@ export default function AssignmentGeneratorPage() {
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               {/* Question */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-custom">Question Text</label>
+                <label className="text-xs font-semibold text-muted-custom">{t('assignments.question_text')}</label>
                 <textarea
                   value={editQuestion}
                   onChange={(e) => setEditQuestion(e.target.value)}
@@ -226,7 +270,7 @@ export default function AssignmentGeneratorPage() {
 
               {/* Marks */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-custom">Target Marks</label>
+                <label className="text-xs font-semibold text-muted-custom">{t('assignments.target_marks')}</label>
                 <input
                   type="number"
                   value={editMarks}
@@ -237,7 +281,7 @@ export default function AssignmentGeneratorPage() {
 
               {/* Rubric */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-custom">Grading Rubric</label>
+                <label className="text-xs font-semibold text-muted-custom">{t('assignments.rubric')}</label>
                 <textarea
                   value={editRubric}
                   onChange={(e) => setEditRubric(e.target.value)}
@@ -247,7 +291,7 @@ export default function AssignmentGeneratorPage() {
 
               {/* Key */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-custom">Answer Key</label>
+                <label className="text-xs font-semibold text-muted-custom">{t('assignments.key')}</label>
                 <textarea
                   value={editKey}
                   onChange={(e) => setEditKey(e.target.value)}
@@ -258,10 +302,10 @@ export default function AssignmentGeneratorPage() {
 
             <div className="p-4 border-t border-border-custom flex gap-3">
               <Button variant="outline" className="flex-1 text-xs" onClick={closeEdit}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button className="flex-1 text-xs" onClick={handleSaveEdit}>
-                Save Changes
+                {t('common.save')}
               </Button>
             </div>
           </div>

@@ -22,6 +22,7 @@ from app.models.learning_material import LearningMaterial, LearningMaterialCache
 from app.models.mcq import MCQQuestion
 from app.models.assignment import Assignment
 from app.models.image import Image
+from app.models.quality import QualityReport, FacultyPreference
 
 __all__ = [
     "User",
@@ -51,6 +52,8 @@ __all__ = [
     "MCQQuestion",
     "Assignment",
     "Image",
+    "QualityReport",
+    "FacultyPreference",
 ]
 
 

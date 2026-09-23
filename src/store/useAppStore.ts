@@ -64,9 +64,11 @@ export interface AppState {
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
   activeTab: string;
+  language: 'en' | 'ta';
   setTheme: (theme: 'light' | 'dark') => void;
   toggleSidebar: () => void;
   setActiveTab: (tab: string) => void;
+  setLanguage: (lang: 'en' | 'ta') => void;
 
   // Auth User
   user: UserProfile;
@@ -144,9 +146,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   theme: 'light',
   sidebarOpen: true,
   activeTab: 'dashboard',
+  language: typeof window !== 'undefined' ? (localStorage.getItem('language') as 'en' | 'ta') || 'en' : 'en',
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setActiveTab: (activeTab) => set({ activeTab }),
+  setLanguage: (language) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', language);
+    }
+    set({ language });
+  },
 
   // User Profile
   user: {

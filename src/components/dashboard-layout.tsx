@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -28,6 +29,7 @@ import Link from 'next/link';
 
 interface NavItem {
   name: string;
+  translationKey: string;
   href: string;
   icon: React.ComponentType<any>;
   badge?: string;
@@ -36,29 +38,91 @@ interface NavItem {
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { sidebarOpen, toggleSidebar, theme, setTheme, user, logout } = useAppStore();
+  const { t } = useTranslation();
+  const { sidebarOpen, toggleSidebar, theme, setTheme, user, logout, setUser } = useAppStore();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  React.useEffect(() => {
+    const checkAuthSession = async () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+          // No token found, redirect to login
+          window.location.href = '/login';
+          return;
+        }
+
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+          const profileRes = await fetch(`${API_URL}/api/v1/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            const profile = profileData.data;
+            setUser({
+              loggedIn: true,
+              name: profile.full_name,
+              email: profile.email,
+              institution: profile.institution || '',
+              department: profile.department || '',
+            });
+            setCheckingAuth(false);
+          } else {
+            // Token expired or invalid
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            logout();
+            window.location.href = '/login';
+          }
+        } catch (e) {
+          console.error('Session validation error:', e);
+          // If network is down but token exists, we can allow offline fallback or wait
+          setCheckingAuth(false);
+        }
+      }
+    };
+
+    checkAuthSession();
+  }, [setUser, logout]);
 
   const navigation: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Course Selection', href: '/dashboard/courses', icon: GraduationCap },
-    { name: 'Generate Content', href: '/dashboard/generate', icon: Sparkles, badge: 'AI' },
-    { name: 'Learning Materials', href: '/dashboard/learning-material', icon: BookOpen },
-    { name: 'MCQ Generator', href: '/dashboard/mcqs', icon: HelpCircle },
-    { name: 'Assignments', href: '/dashboard/assignments', icon: FileSpreadsheet },
-    { name: 'Question Bank', href: '/dashboard/question-bank', icon: Database },
-    { name: 'History', href: '/dashboard/history', icon: History },
-    { name: 'Profile', href: '/dashboard/profile', icon: User },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Dashboard', translationKey: 'nav.dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Course Selection', translationKey: 'nav.courses', href: '/dashboard/courses', icon: GraduationCap },
+    { name: 'Generate Content', translationKey: 'nav.generate', href: '/dashboard/generate', icon: Sparkles, badge: 'AI' },
+    { name: 'Learning Materials', translationKey: 'nav.notes', href: '/dashboard/learning-material', icon: BookOpen },
+    { name: 'MCQ Generator', translationKey: 'nav.mcqs', href: '/dashboard/mcqs', icon: HelpCircle },
+    { name: 'Assignments', translationKey: 'nav.assignments', href: '/dashboard/assignments', icon: FileSpreadsheet },
+    { name: 'Question Bank', translationKey: 'nav.bank', href: '/dashboard/question-bank', icon: Database },
+    { name: 'History', translationKey: 'nav.history', href: '/dashboard/history', icon: History },
+    { name: 'Profile', translationKey: 'nav.profile', href: '/dashboard/profile', icon: User },
+    { name: 'Settings', translationKey: 'nav.settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   // Filtered menu items for search command palette simulation
   const filteredNav = navigation.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    t(item.translationKey).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const activeItem = navigation.find((item) => pathname === item.href) || navigation[0];
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-secondary text-foreground">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium text-muted-custom">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-bg-secondary text-foreground transition-colors duration-300">
@@ -97,7 +161,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             return (
               <Link
-                key={item.name}
+                key={item.translationKey}
                 href={item.href}
                 className={`group flex items-center gap-3.5 px-3.5 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive
@@ -106,7 +170,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon className={`h-5 w-5 shrink-0 transition-transform group-hover:scale-105 ${isActive ? 'text-current' : 'text-muted-custom/80 group-hover:text-foreground'}`} />
-                {sidebarOpen && <span className="truncate">{item.name}</span>}
+                {sidebarOpen && <span className="truncate">{t(item.translationKey)}</span>}
                 {sidebarOpen && item.badge && (
                   <span className={`ml-auto px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded-md ${
                     isActive ? 'bg-primary-foreground text-primary' : 'bg-primary/15 text-primary dark:bg-primary/20'
@@ -143,9 +207,30 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <p className="text-[10px] text-muted-custom truncate leading-3">{user.department}</p>
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+                  const access_token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+                  
+                  if (access_token) {
+                    try {
+                      await fetch(`${API_URL}/api/v1/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${access_token}`,
+                        },
+                      });
+                    } catch (e) {
+                      console.error('Logout request failed', e);
+                    }
+                  }
+                  
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                  }
+                  
                   logout();
-                  router.push('/login');
+                  window.location.href = '/login';
                 }}
                 className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-custom hover:text-red-500 hover:bg-red-500/10 transition-colors"
                 title="Log Out"
@@ -174,7 +259,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </button>
             <div className="hidden sm:block">
-              <h1 className="font-heading font-semibold text-lg">{activeItem?.name}</h1>
+              <h1 className="font-heading font-semibold text-lg">{activeItem ? t(activeItem.translationKey) : ''}</h1>
               <p className="text-[11px] text-muted-custom">Academic Content System</p>
             </div>
           </div>
@@ -187,7 +272,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-2 px-3 py-2 text-xs text-muted-custom border border-border-custom rounded-xl hover:bg-muted-bg transition-colors w-40 md:w-56"
             >
               <Search className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Search sections...</span>
+              <span className="hidden md:inline">{t('common.search')}</span>
               <kbd className="ml-auto pointer-events-none select-none hidden lg:flex items-center gap-0.5 text-[9px] bg-muted-bg border border-border-custom/80 px-1.5 py-0.5 rounded-md font-mono">
                 <Command className="h-2 w-2" />K
               </kbd>
@@ -258,7 +343,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   const Icon = item.icon;
                   return (
                     <button
-                      key={item.name}
+                      key={item.translationKey}
                       onClick={() => {
                         router.push(item.href);
                         setSearchOpen(false);
@@ -267,7 +352,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted-bg text-sm text-left transition-colors"
                     >
                       <Icon className="h-4.5 w-4.5 text-muted-custom" />
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-medium">{t(item.translationKey)}</span>
                       <span className="ml-auto text-xs text-muted-custom">Go to Page</span>
                     </button>
                   );

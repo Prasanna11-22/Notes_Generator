@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAppStore } from '@/store/useAppStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Settings,
   Cpu,
@@ -11,11 +13,16 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const store = useAppStore();
+  const { t } = useTranslation();
+
   const [model, setModel] = useState('qwen-2.5-7b');
-  const [lang, setLang] = useState('en');
+  const [lang, setLangState] = useState(store.language || 'en');
+  const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
   
   // Notification flags
   const [notifyJob, setNotifyJob] = useState(true);
@@ -30,6 +37,9 @@ export default function SettingsPage() {
   const handleSave = () => {
     setSaving(true);
     setSavedSuccess(false);
+
+    // Apply language instantly
+    store.setLanguage(lang as 'en' | 'ta');
 
     setTimeout(() => {
       setSaving(false);
@@ -56,30 +66,30 @@ export default function SettingsPage() {
       
       {/* Header */}
       <div>
-        <h2 className="font-heading font-bold text-2xl tracking-tight">System Settings</h2>
-        <p className="text-xs text-muted-custom">Configure model connections, UI languages, and notification schedules.</p>
+        <h2 className="font-heading font-bold text-2xl tracking-tight">{t('settings.title')}</h2>
+        <p className="text-xs text-muted-custom">{t('settings.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Columns: Config Forms (2/3 columns) */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-8 text-foreground">
           <Card className="border border-border-custom bg-card">
             <CardHeader>
-              <CardTitle>System Configuration</CardTitle>
-              <CardDescription>Adjust LLM parameters and UI properties.</CardDescription>
+              <CardTitle>{t('settings.card_title')}</CardTitle>
+              <CardDescription>{t('settings.card_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 text-xs">
               {savedSuccess && (
                 <div className="p-3.5 rounded-xl bg-green-500/10 border border-green-500/20 text-xs text-green-600 dark:text-green-400 font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Configuration settings saved!
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Settings saved successfully!
                 </div>
               )}
 
               {/* LLM Model Selection */}
               <div className="space-y-2">
                 <label className="font-semibold text-muted-custom flex items-center gap-1.5">
-                  <Cpu className="h-4 w-4 text-primary" /> Active LLM Model Runtime
+                  <Cpu className="h-4 w-4 text-primary" /> {t('settings.model')}
                 </label>
                 <select
                   value={model}
@@ -92,40 +102,41 @@ export default function SettingsPage() {
                   <option value="gemini-flash">Gemini 1.5 Flash API (Cloud-hosted network fallback)</option>
                 </select>
                 <p className="text-[10px] text-muted-custom">
-                  Local models run directly on your institution's CPU. Cloud APIs require a secondary network token config.
+                  {t('settings.model_desc')}
                 </p>
               </div>
 
               {/* Default Language */}
               <div className="space-y-2 pt-2">
                 <label className="font-semibold text-muted-custom flex items-center gap-1.5">
-                  <Globe className="h-4 w-4 text-secondary" /> System Language
+                  <Globe className="h-4 w-4 text-secondary" /> {t('settings.language')}
                 </label>
                 <select
                   value={lang}
-                  onChange={(e) => setLang(e.target.value)}
+                  onChange={(e) => {
+                    setLangState(e.target.value as 'en' | 'ta');
+                    // Update instantly per requirement
+                    store.setLanguage(e.target.value as 'en' | 'ta');
+                  }}
                   className="w-full text-xs py-2.5 px-3 rounded-xl border border-border-custom bg-bg-secondary font-medium text-foreground focus:outline-hidden"
                 >
                   <option value="en">English (US/UK)</option>
-                  <option value="es">Spanish (Español)</option>
-                  <option value="hi">Hindi (हिन्दी)</option>
-                  <option value="fr">French (Français)</option>
-                  <option value="ar">Arabic (العربية)</option>
+                  <option value="ta">Tamil (தமிழ்)</option>
                 </select>
               </div>
 
               {/* Notification Toggles */}
               <div className="space-y-3 pt-4 border-t border-border-custom/50">
                 <h4 className="font-semibold text-muted-custom flex items-center gap-1.5">
-                  <Bell className="h-4 w-4 text-amber-500" /> Notifications & Alerts
+                  <Bell className="h-4 w-4 text-amber-500" /> {t('settings.notify')}
                 </h4>
                 
                 <div className="space-y-3 pl-1">
                   {/* Toggle 1 */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <p className="font-semibold text-foreground">Background Job Completions</p>
-                      <p className="text-[10px] text-muted-custom">Send browser alerts once content generation completes.</p>
+                      <p className="font-semibold">{t('settings.notify_job')}</p>
+                      <p className="text-[10px] text-muted-custom">{t('settings.notify_job_desc')}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -138,8 +149,8 @@ export default function SettingsPage() {
                   {/* Toggle 2 */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <p className="font-semibold text-foreground">Validation Failures</p>
-                      <p className="text-[10px] text-muted-custom">Alert if validator agent rejects more than 3 consecutive drafts.</p>
+                      <p className="font-semibold">{t('settings.notify_verify')}</p>
+                      <p className="text-[10px] text-muted-custom">{t('settings.notify_verify_desc')}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -152,8 +163,8 @@ export default function SettingsPage() {
                   {/* Toggle 3 */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <p className="font-semibold text-foreground">Weekly Digest Summaries</p>
-                      <p className="text-[10px] text-muted-custom">Receive email logs listing question bank usage statistics.</p>
+                      <p className="font-semibold">{t('settings.notify_weekly')}</p>
+                      <p className="text-[10px] text-muted-custom">{t('settings.notify_weekly_desc')}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -168,7 +179,7 @@ export default function SettingsPage() {
               {/* Submit */}
               <div className="pt-2">
                 <Button onClick={handleSave} loading={saving} className="w-full sm:w-auto text-xs">
-                  Save Settings
+                  {t('settings.save_settings')}
                 </Button>
               </div>
             </CardContent>
@@ -177,17 +188,51 @@ export default function SettingsPage() {
 
         {/* Right Column: Danger zone / Institutional Data controls (1/3 columns) */}
         <div className="space-y-8">
-          <Card className="border border-red-500/15 bg-red-500/5 dark:bg-red-500/10 p-6 space-y-4">
-            <div className="flex gap-3">
-              <div className="h-9 w-9 rounded-xl bg-red-500/20 text-red-600 dark:text-red-500 flex items-center justify-center shrink-0">
-                <Trash2 className="h-4.5 w-4.5" />
+          {/* Maintenance Card */}
+          <Card className={`p-6 space-y-4 border transition-all duration-300 ${
+            isMaintenanceActive 
+              ? 'border-red-500/15 bg-red-500/5 dark:bg-red-500/10' 
+              : 'border-border-custom bg-card'
+          }`}>
+            <div className="flex gap-3 text-foreground">
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isMaintenanceActive 
+                  ? 'bg-red-500/20 text-red-600 dark:text-red-500' 
+                  : 'bg-green-500/15 text-green-600 dark:text-green-500'
+              }`}>
+                {isMaintenanceActive ? <AlertTriangle className="h-4.5 w-4.5" /> : <Info className="h-4.5 w-4.5" />}
               </div>
               <div className="space-y-1.5 text-xs">
-                <h3 className="font-heading font-semibold text-sm text-red-700 dark:text-red-400">Institutional Maintenance</h3>
-                <p className="text-red-900/80 dark:text-red-300/80 leading-relaxed">
-                  Purge cached curriculum indices, historical generation timelines, or reset local embedding indices.
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading font-semibold text-sm">
+                    {t('settings.maintenance')}
+                  </h3>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                    isMaintenanceActive 
+                      ? 'bg-red-500/20 text-red-700 dark:text-red-400' 
+                      : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                  }`}>
+                    {isMaintenanceActive ? 'Active' : 'Offline'}
+                  </span>
+                </div>
+                <p className="text-muted-custom font-semibold">
+                  {isMaintenanceActive ? t('settings.maintenance_active') : t('settings.no_maintenance')}
+                </p>
+                <p className="text-muted-custom leading-relaxed">
+                  {t('settings.maintenance_desc')}
                 </p>
               </div>
+            </div>
+
+            {/* Test Toggle to switch between states manually for testing */}
+            <div className="flex items-center justify-between pt-2 border-t border-border-custom/50 text-[10px] text-muted-custom">
+              <span>Test Status Toggle</span>
+              <input
+                type="checkbox"
+                checked={isMaintenanceActive}
+                onChange={(e) => setIsMaintenanceActive(e.target.checked)}
+                className="h-3.5 w-3.5 rounded bg-bg-secondary accent-primary"
+              />
             </div>
 
             {purgeSuccess && (
@@ -198,16 +243,16 @@ export default function SettingsPage() {
 
             <div className="pt-2 space-y-2 text-xs">
               <Button
-                variant="danger"
+                variant={isMaintenanceActive ? 'danger' : 'outline'}
                 size="sm"
-                className="w-full text-xs justify-center hover:bg-red-700"
+                className="w-full text-xs justify-center hover:bg-red-700/10"
                 onClick={handlePurge}
                 loading={purging}
               >
-                Clear History Logs
+                {t('settings.clear_history')}
               </Button>
-              <p className="text-[10px] text-red-800/60 dark:text-red-300/60 text-center leading-normal">
-                * This will empty the database table generated_content and question_bank_history.
+              <p className="text-[10px] text-muted-custom text-center leading-normal">
+                {t('settings.clear_history_desc')}
               </p>
             </div>
           </Card>

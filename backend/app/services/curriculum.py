@@ -194,7 +194,6 @@ class CurriculumService:
             raise NotFoundError("Semester", str(semester_id))
         await self.sem_repo.delete(sem)
 
-    # ── Course CRUD ───────────────────────────────────────────────────────────
     async def create_course(self, payload: CourseCreate) -> Course:
         sem = await self.sem_repo.get_by_id(payload.semester_id)
         if not sem:
@@ -202,6 +201,13 @@ class CurriculumService:
 
         if await self.course_repo.get_by_code(payload.course_code):
             raise ConflictError(f"Course with code '{payload.course_code}' already exists.")
+
+        # Enforce unique course title to prevent duplicate course names
+        duplicate_title_res = await self._session.execute(
+            select(Course).where(func.lower(Course.course_title) == payload.course_title.lower())
+        )
+        if duplicate_title_res.scalar_one_or_none():
+            raise ConflictError(f"Course with title '{payload.course_title}' already exists.")
 
         course = Course(
             id=uuid.uuid4(),

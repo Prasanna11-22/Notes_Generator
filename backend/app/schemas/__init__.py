@@ -107,6 +107,12 @@ from app.schemas.image import (
     ImageValidationRequest,
     ImageValidationResponse,
 )
+from app.schemas.quality import (
+    QualityValidationRequest,
+    QualityReportRead,
+    FacultyPreferenceCreate,
+    FacultyPreferenceRead,
+)
 
 __all__ = [
     "UserCreate",
@@ -202,6 +208,10 @@ __all__ = [
     "ImageRead",
     "ImageValidationRequest",
     "ImageValidationResponse",
+    "QualityValidationRequest",
+    "QualityReportRead",
+    "FacultyPreferenceCreate",
+    "FacultyPreferenceRead",
 ]
 
 

@@ -20,6 +20,7 @@ from app.api.v1.learning_material import router as learning_material_router
 from app.api.v1.mcq import router as mcq_router
 from app.api.v1.assignment import router as assignment_router
 from app.api.v1.image import router as image_router
+from app.api.v1.quality import router as quality_router
 
 api_router = APIRouter()
 
@@ -37,4 +38,5 @@ api_router.include_router(learning_material_router)
 api_router.include_router(mcq_router)
 api_router.include_router(assignment_router)
 api_router.include_router(image_router)
+api_router.include_router(quality_router)
 

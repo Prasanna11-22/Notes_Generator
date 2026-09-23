@@ -446,11 +446,11 @@ async def delete_semester(
     "/courses",
     response_model=APIResponse[CourseRead],
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new Course (Admin only)",
+    summary="Create a new Course",
 )
 async def create_course(
     payload: CourseCreate,
-    _admin: AdminUser,
+    _user: FacultyUser,
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[CourseRead]:
     service = CurriculumService(db)
